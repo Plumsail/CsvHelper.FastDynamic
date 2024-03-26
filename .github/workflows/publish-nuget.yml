@@ -48,4 +48,7 @@ jobs:
 
       - name: Push to GitHub package registry
         working-directory: ./CsvHelper.FastDynamic
-        run: dotnet nuget push *.nupkg -s https://api.nuget.org/v3/index.json -k $NUGET_AUTH_TOKEN --skip-duplicate        
+        run: dotnet nuget push *.nupkg -s https://api.nuget.org/v3/index.json -k $NUGET_AUTH_TOKEN --skip-duplicate    
+        env:
+          NUGET_AUTH_TOKEN: ${{ secrets.NUGETTOKEN }} 
+        
