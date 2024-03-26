@@ -5,6 +5,15 @@ name: Build and publish package
 on:
   push:
     branches: [ master ]
+  workflow_dispatch:
+    inputs:
+      newVersion:
+        description: 'The new version number'
+        required: false
+
+env:
+  BUILD_CONFIGURATION: 'Release'    # set this to the appropriate build configuration
+  DOTNET_VERSION: '8.0.202' 
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -17,18 +26,20 @@ jobs:
         uses: actions/checkout@master
 
       - name: Setup .NET environment
-        uses: actions/setup-dotnet@v1
+        uses: actions/setup-dotnet@v2
         with:
-          dotnet-version: '6.0.100'
-
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+        env:
+          NUGET_AUTH_TOKEN: ${{ secrets.NUGETTOKEN }} 
+       
       - name: Build project
         working-directory: ./CsvHelper.FastDynamic
         run: dotnet build --configuration Release
 
       - name: Generate a NuGet package
         working-directory: ./CsvHelper.FastDynamic
-        run: dotnet pack --no-build -c Release -o .
+        run: dotnet pack --no-build -c Release -p:PackageID=Plumsail.CsvHelpere.FastDynamic -p:IncludeSymbols=true -p:SymbolPackageFormat=snupkg --version-suffix ci${{ github.run_id }} -o .
 
       - name: Push to GitHub package registry
         working-directory: ./CsvHelper.FastDynamic
-        run: dotnet nuget push "*.nupkg" -k ${{secrets.NUGETORGTOKEN}} -s "https://api.nuget.org/v3/index.json" --skip-duplicate
+        run: dotnet nuget push *.nupkg -k $NUGET_AUTH_TOKEN -s https://api.nuget.org/v3/index.json --skip-duplicate        
